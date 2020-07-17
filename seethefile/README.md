@@ -1,5 +1,7 @@
 # seethefile
 
+`FOSP`
+
 >Can you see anything?
 >
 >Get a shell for me.
@@ -75,7 +77,8 @@ int __cdecl main(int argc, const char **argv, const char **envp)
 ```
 
 In the main function, we can make overflow ang get soem '_memory leak_'.
-Checking the address of the global variable `name`, it is found to be just before the got area. -> **libc leak is possible**
+Checking the address of the global variable `name`, it is found to be just before the global variable `fp`. -> **heap addr leak is possible ?**
+However, scanf automatically insert the _null byte_(\x00), so it's hard to leak...
 
 ### 2. openfile()
 
