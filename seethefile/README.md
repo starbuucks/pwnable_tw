@@ -60,7 +60,7 @@ int __cdecl main(int argc, const char **argv, const char **envp)
       case 5:
         printf("Leave your name :");
         __isoc99_scanf("%s", name);             // overflow! (bss)
-        printf("Thank you %s ,see you next time\n", name);// fsb!!
+        printf("Thank you %s ,see you next time\n", name);// memory leak!
         if ( fp )
           fclose(fp);
         exit(0);
@@ -74,8 +74,8 @@ int __cdecl main(int argc, const char **argv, const char **envp)
 }
 ```
 
-In the main function, we can make overflow or trigger '_format string bug_'.
-Checking the address of the global variable `name`, it is found to be just before the got area.
+In the main function, we can make overflow ang get soem '_memory leak_'.
+Checking the address of the global variable `name`, it is found to be just before the got area. -> **libc leak is possible**
 
 ### 2. openfile()
 
@@ -145,7 +145,7 @@ int writefile()
 }
 ```
 
-a simple file-writing function
+a simple buffer-writing function
 but there are some blacklist rules
 
 ### 5. closefile()
@@ -167,3 +167,7 @@ int closefile()
 a simple file-close function
 
 ## exploit
+
+scenario
+
+>
