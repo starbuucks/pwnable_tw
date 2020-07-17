@@ -26,7 +26,9 @@ $ checksec seethefile
 ```
 
 ## code analysis
-1. main()
+
+### 1. main()
+
 ```c
 int __cdecl main(int argc, const char **argv, const char **envp)
 {
@@ -72,6 +74,96 @@ int __cdecl main(int argc, const char **argv, const char **envp)
 }
 ```
 
-in the main function, we can make overflow or trigger _format string bug_ 
+In the main function, we can make overflow or trigger '_format string bug_'.
+Checking the address of the global variable `name`, it is found to be just before the got area.
 
-2. 
+### 2. openfile()
+
+```
+int openfile()
+{
+  int result; // eax
+
+  if ( fp )
+  {
+    puts("You need to close the file first");
+    result = 0;
+  }
+  else
+  {
+    memset(magicbuf, 0, 0x190u);
+    printf("What do you want to see :");
+    __isoc99_scanf("%63s", filename);
+    if ( strstr(filename, "flag") )
+    {
+      puts("Danger !");
+      exit(0);
+    }
+    fp = fopen(filename, "r");
+    if ( fp )
+      result = puts("Open Successful");
+    else
+      result = puts("Open failed");
+  }
+  return result;
+}
+```
+
+There is no overflow possibility.
+It seems to ban opening the filename including '_flag_'.
+
+### 3. readfile()
+
+```
+int readfile()
+{
+  int result; // eax
+
+  memset(magicbuf, 0, 0x190u);
+  if ( !fp )
+    return puts("You need to open a file first");
+  result = fread(magicbuf, 0x18Fu, 1u, fp);
+  if ( result )
+    result = puts("Read Successful");
+  return result;
+}
+```
+
+a simple file-reading function
+
+### 4. writefile()
+
+```
+int writefile()
+{
+  if ( strstr(filename, "flag") || strstr(magicbuf, "FLAG") || strchr(magicbuf, '}') )
+  {
+    puts("you can't see it");
+    exit(1);
+  }
+  return puts(magicbuf);
+}
+```
+
+a simple file-writing function
+but there are some blacklist rules
+
+### 5. closefile()
+
+```
+int closefile()
+{
+  int result; // eax
+
+  if ( fp )
+    result = fclose(fp);
+  else
+    result = puts("Nothing need to close");
+  fp = 0;
+  return result;
+}
+```
+
+a simple file-close function
+
+## exploit
