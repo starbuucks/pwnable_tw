@@ -1,6 +1,6 @@
 # seethefile
 
-`FOSP`
+`FSOP`
 
 >Can you see anything?
 >
