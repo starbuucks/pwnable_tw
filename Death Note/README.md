@@ -34,3 +34,7 @@ Start      End        Perm	Name
 rwx 권한 있는 영역도 많다.
 
 이거 그냥 shellcode를 got로 올려서 실행하면 안되나?
+
+단, printable한지 검사하기 때문에 0x20 ~ 0x7e 범위 내의 ascii code로만 shellcode를 작성해야 됨.
+
+null로 우회하면 strdup를 통한 복사가 안 이뤄지기 때문에 정면돌파 할 수 밖에 없음.
