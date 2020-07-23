@@ -38,3 +38,7 @@ rwx 권한 있는 영역도 많다.
 단, printable한지 검사하기 때문에 0x20 ~ 0x7e 범위 내의 ascii code로만 shellcode를 작성해야 됨.
 
 null로 우회하면 strdup를 통한 복사가 안 이뤄지기 때문에 정면돌파 할 수 밖에 없음.
+
+.. 하지만 막판 int 0x80 (\xcd\x80)을 넣기가 너무 힘들다.
+
+strlen()의 got를 변조해서 아무것도 안하는 함수로 만드는 방법을 사용하면 is_printable을 우회할 수 있을듯.
